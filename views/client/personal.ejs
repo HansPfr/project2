@@ -20,14 +20,14 @@
   <div class="card-body">
     <form method="post" action="/client/personal">
       <div class="mb-3">
-        <label class="form-label">First Name</label>
+        <label class="form-label">First Name <span class="text-danger">*</span></label>
         <input type="text" name="first_name" class="form-control"
-               value="<%= record.first_name || '' %>">
+               value="<%= record.first_name || '' %>" required>
       </div>
       <div class="mb-3">
-        <label class="form-label">Last Name</label>
+        <label class="form-label">Last Name <span class="text-danger">*</span></label>
         <input type="text" name="last_name" class="form-control"
-               value="<%= record.last_name || '' %>">
+               value="<%= record.last_name || '' %>" required>
       </div>
       <div class="mb-3">
         <label class="form-label">Date of Birth</label>
