@@ -1,0 +1,26 @@
+<div class="mb-3">
+  <label class="form-label">Type</label>
+  <select name="type" class="form-select">
+    <option value="home" <%= (addr.type === 'home' || !addr.type) ? 'selected' : '' %>>Home</option>
+    <option value="work" <%= addr.type === 'work' ? 'selected' : '' %>>Work</option>
+    <option value="other" <%= addr.type === 'other' ? 'selected' : '' %>>Other</option>
+  </select>
+</div>
+<div class="mb-3">
+  <label class="form-label">Street</label>
+  <input type="text" name="street" class="form-control" value="<%= addr.street || '' %>">
+</div>
+<div class="row">
+  <div class="col-4 mb-3">
+    <label class="form-label">Postal Code</label>
+    <input type="text" name="postal_code" class="form-control" value="<%= addr.postal_code || '' %>">
+  </div>
+  <div class="col-8 mb-3">
+    <label class="form-label">City</label>
+    <input type="text" name="city" class="form-control" value="<%= addr.city || '' %>">
+  </div>
+</div>
+<div class="mb-3">
+  <label class="form-label">Country</label>
+  <input type="text" name="country" class="form-control" value="<%= addr.country || '' %>">
+</div>

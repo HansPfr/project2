@@ -1,0 +1,11 @@
+<div class="mb-3">
+  <label class="form-label">Type</label>
+  <select name="type" class="form-select">
+    <option value="personal" <%= (item.type === 'personal' || !item.type) ? 'selected' : '' %>>Personal</option>
+    <option value="work" <%= item.type === 'work' ? 'selected' : '' %>>Work</option>
+  </select>
+</div>
+<div class="mb-3">
+  <label class="form-label">Email Address</label>
+  <input type="email" name="address" class="form-control" value="<%= item.address || '' %>" required>
+</div>

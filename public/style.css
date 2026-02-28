@@ -1,0 +1,13 @@
+body {
+  background-color: #f8f9fa;
+}
+
+.hover-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  color: inherit;
+}
+
+.hover-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12) !important;
+}

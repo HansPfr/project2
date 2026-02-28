@@ -1,0 +1,110 @@
+<%- include('../partials/header', { title: 'Addresses', navType: 'client' }) %>
+
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/client/dashboard">Dashboard</a></li>
+    <li class="breadcrumb-item active">Postal Addresses</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="mb-0"><i class="bi bi-house-fill me-2 text-success"></i>Postal Addresses</h2>
+  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">
+    <i class="bi bi-plus-lg me-1"></i>Add Address
+  </button>
+</div>
+
+<% if (success || query_success) { %>
+  <div class="alert alert-success"><%= success || query_success %></div>
+<% } %>
+
+<% const qs = locals.success; %>
+<% if (typeof locals !== 'undefined' && typeof locals.success === 'undefined' && typeof query !== 'undefined') { %>
+<% } %>
+
+<script>
+  const qsSuccess = new URLSearchParams(window.location.search).get('success');
+  if (qsSuccess) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const el = document.createElement('div');
+      el.className = 'alert alert-success';
+      el.textContent = qsSuccess;
+      document.querySelector('.container').insertBefore(el, document.querySelector('.container').children[2]);
+    });
+  }
+</script>
+
+<% if (addresses.length === 0) { %>
+  <div class="text-muted">No addresses added yet.</div>
+<% } else { %>
+  <div class="row g-3">
+    <% addresses.forEach(addr => { %>
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <span class="badge bg-secondary mb-2"><%= addr.type %></span>
+            <p class="mb-1"><%= addr.street %></p>
+            <p class="mb-1"><%= addr.postal_code %> <%= addr.city %></p>
+            <p class="mb-0"><%= addr.country %></p>
+          </div>
+          <div class="card-footer bg-transparent d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary"
+              data-bs-toggle="modal" data-bs-target="#editModal<%= addr.id %>">
+              <i class="bi bi-pencil"></i> Edit
+            </button>
+            <form method="post" action="/client/addresses/<%= addr.id %>/delete"
+                  onsubmit="return confirm('Delete this address?')">
+              <button class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> Delete
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Modal -->
+      <div class="modal fade" id="editModal<%= addr.id %>" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="post" action="/client/addresses/<%= addr.id %>/edit">
+              <div class="modal-header">
+                <h5 class="modal-title">Edit Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <%- include('./address-fields', { addr }) %>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="/client/addresses">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Address</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <%- include('./address-fields', { addr: {} }) %>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,56 @@
+<%- include('../partials/header', { title: 'Edit Client', navType: 'admin' }) %>
+
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/admin/dashboard">Clients</a></li>
+    <li class="breadcrumb-item active">Edit Client</li>
+  </ol>
+</nav>
+
+<h2 class="mb-4"><i class="bi bi-pencil-square me-2"></i>Edit Client</h2>
+
+<% if (success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="card shadow-sm" style="max-width: 500px;">
+  <div class="card-body">
+    <form method="post" action="/admin/clients/<%= client.id %>/edit">
+      <div class="mb-3">
+        <label class="form-label">Username <span class="text-danger">*</span></label>
+        <input type="text" name="username" class="form-control"
+               value="<%= client.username %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">First Name</label>
+        <input type="text" name="first_name" class="form-control"
+               value="<%= client.first_name || '' %>">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Last Name</label>
+        <input type="text" name="last_name" class="form-control"
+               value="<%= client.last_name || '' %>">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Date of Birth</label>
+        <input type="date" name="date_of_birth" class="form-control"
+               value="<%= client.date_of_birth || '' %>">
+      </div>
+      <hr>
+      <div class="mb-3">
+        <label class="form-label">New Password</label>
+        <input type="password" name="password" class="form-control" minlength="6">
+        <div class="form-text">Leave blank to keep the current password. Minimum 6 characters.</div>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="/admin/dashboard" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

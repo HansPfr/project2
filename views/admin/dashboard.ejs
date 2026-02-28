@@ -1,0 +1,57 @@
+<%- include('../partials/header', { title: 'Admin Dashboard', navType: 'admin' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="mb-0"><i class="bi bi-people-fill me-2"></i>Clients</h2>
+  <a href="/admin/clients/new" class="btn btn-success">
+    <i class="bi bi-person-plus-fill me-1"></i>New Client
+  </a>
+</div>
+
+<% if (success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+
+<% if (clients.length === 0) { %>
+  <div class="alert alert-info">No clients yet. <a href="/admin/clients/new">Create the first one.</a></div>
+<% } else { %>
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Date of Birth</th>
+          <th>Created</th>
+          <th style="width:130px">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% clients.forEach(c => { %>
+          <tr>
+            <td><%= c.id %></td>
+            <td><strong><%= c.username %></strong></td>
+            <td><%= c.first_name || '—' %></td>
+            <td><%= c.last_name || '—' %></td>
+            <td><%= c.date_of_birth || '—' %></td>
+            <td class="text-muted small"><%= new Date(c.created_at).toLocaleDateString() %></td>
+            <td>
+              <a href="/admin/clients/<%= c.id %>/edit" class="btn btn-sm btn-outline-primary me-1">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form method="post" action="/admin/clients/<%= c.id %>/delete"
+                    class="d-inline" onsubmit="return confirm('Delete client <%= c.username %>?')">
+                <button class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

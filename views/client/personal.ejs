@@ -1,0 +1,47 @@
+<%- include('../partials/header', { title: 'Personal Data', navType: 'client' }) %>
+
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/client/dashboard">Dashboard</a></li>
+    <li class="breadcrumb-item active">Personal Data</li>
+  </ol>
+</nav>
+
+<h2 class="mb-4"><i class="bi bi-person-fill me-2 text-primary"></i>Personal Data</h2>
+
+<% if (success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="card shadow-sm" style="max-width: 500px;">
+  <div class="card-body">
+    <form method="post" action="/client/personal">
+      <div class="mb-3">
+        <label class="form-label">First Name</label>
+        <input type="text" name="first_name" class="form-control"
+               value="<%= client.first_name || '' %>">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Last Name</label>
+        <input type="text" name="last_name" class="form-control"
+               value="<%= client.last_name || '' %>">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Date of Birth</label>
+        <input type="date" name="date_of_birth" class="form-control"
+               value="<%= client.date_of_birth || '' %>">
+      </div>
+      <div class="mb-3">
+        <label class="form-label text-muted">Username</label>
+        <input type="text" class="form-control" value="<%= client.username %>" disabled>
+      </div>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="/client/dashboard" class="btn btn-link">Cancel</a>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

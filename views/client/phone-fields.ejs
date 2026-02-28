@@ -1,0 +1,12 @@
+<div class="mb-3">
+  <label class="form-label">Type</label>
+  <select name="type" class="form-select">
+    <option value="mobile" <%= (item.type === 'mobile' || !item.type) ? 'selected' : '' %>>Mobile</option>
+    <option value="home" <%= item.type === 'home' ? 'selected' : '' %>>Home</option>
+    <option value="work" <%= item.type === 'work' ? 'selected' : '' %>>Work</option>
+  </select>
+</div>
+<div class="mb-3">
+  <label class="form-label">Number</label>
+  <input type="tel" name="number" class="form-control" value="<%= item.number || '' %>" required>
+</div>
