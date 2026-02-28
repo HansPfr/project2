@@ -7,6 +7,14 @@
   </select>
 </div>
 <div class="mb-3">
+  <label class="form-label">Country</label>
+  <select name="country" class="form-select addr-country">
+    <option value="" <%= !addr.country ? 'selected' : '' %>>— Select —</option>
+    <option value="USA" <%= addr.country === 'USA' ? 'selected' : '' %>>USA</option>
+    <option value="Canada" <%= addr.country === 'Canada' ? 'selected' : '' %>>Canada</option>
+  </select>
+</div>
+<div class="mb-3">
   <label class="form-label">Street</label>
   <input type="text" name="street" class="form-control" value="<%= addr.street || '' %>">
 </div>
@@ -18,17 +26,129 @@
   <label class="form-label">City</label>
   <input type="text" name="city" class="form-control" value="<%= addr.city || '' %>">
 </div>
-<div class="row">
-  <div class="col-8 mb-3">
-    <label class="form-label">State / Province</label>
-    <input type="text" name="state" class="form-control" value="<%= addr.state || '' %>">
+<div class="row align-items-end">
+  <div class="col mb-3">
+    <label class="form-label addr-state-label">State / Province</label>
+    <select name="state" class="form-select addr-state-select" style="max-width:90px">
+      <option value="">—</option>
+      <optgroup label="US States" class="opts-usa">
+        <option value="AL" <%= addr.state==='AL'?'selected':'' %>>AL</option>
+        <option value="AK" <%= addr.state==='AK'?'selected':'' %>>AK</option>
+        <option value="AZ" <%= addr.state==='AZ'?'selected':'' %>>AZ</option>
+        <option value="AR" <%= addr.state==='AR'?'selected':'' %>>AR</option>
+        <option value="CA" <%= addr.state==='CA'?'selected':'' %>>CA</option>
+        <option value="CO" <%= addr.state==='CO'?'selected':'' %>>CO</option>
+        <option value="CT" <%= addr.state==='CT'?'selected':'' %>>CT</option>
+        <option value="DE" <%= addr.state==='DE'?'selected':'' %>>DE</option>
+        <option value="FL" <%= addr.state==='FL'?'selected':'' %>>FL</option>
+        <option value="GA" <%= addr.state==='GA'?'selected':'' %>>GA</option>
+        <option value="HI" <%= addr.state==='HI'?'selected':'' %>>HI</option>
+        <option value="ID" <%= addr.state==='ID'?'selected':'' %>>ID</option>
+        <option value="IL" <%= addr.state==='IL'?'selected':'' %>>IL</option>
+        <option value="IN" <%= addr.state==='IN'?'selected':'' %>>IN</option>
+        <option value="IA" <%= addr.state==='IA'?'selected':'' %>>IA</option>
+        <option value="KS" <%= addr.state==='KS'?'selected':'' %>>KS</option>
+        <option value="KY" <%= addr.state==='KY'?'selected':'' %>>KY</option>
+        <option value="LA" <%= addr.state==='LA'?'selected':'' %>>LA</option>
+        <option value="ME" <%= addr.state==='ME'?'selected':'' %>>ME</option>
+        <option value="MD" <%= addr.state==='MD'?'selected':'' %>>MD</option>
+        <option value="MA" <%= addr.state==='MA'?'selected':'' %>>MA</option>
+        <option value="MI" <%= addr.state==='MI'?'selected':'' %>>MI</option>
+        <option value="MN" <%= addr.state==='MN'?'selected':'' %>>MN</option>
+        <option value="MS" <%= addr.state==='MS'?'selected':'' %>>MS</option>
+        <option value="MO" <%= addr.state==='MO'?'selected':'' %>>MO</option>
+        <option value="MT" <%= addr.state==='MT'?'selected':'' %>>MT</option>
+        <option value="NE" <%= addr.state==='NE'?'selected':'' %>>NE</option>
+        <option value="NV" <%= addr.state==='NV'?'selected':'' %>>NV</option>
+        <option value="NH" <%= addr.state==='NH'?'selected':'' %>>NH</option>
+        <option value="NJ" <%= addr.state==='NJ'?'selected':'' %>>NJ</option>
+        <option value="NM" <%= addr.state==='NM'?'selected':'' %>>NM</option>
+        <option value="NY" <%= addr.state==='NY'?'selected':'' %>>NY</option>
+        <option value="NC" <%= addr.state==='NC'?'selected':'' %>>NC</option>
+        <option value="ND" <%= addr.state==='ND'?'selected':'' %>>ND</option>
+        <option value="OH" <%= addr.state==='OH'?'selected':'' %>>OH</option>
+        <option value="OK" <%= addr.state==='OK'?'selected':'' %>>OK</option>
+        <option value="OR" <%= addr.state==='OR'?'selected':'' %>>OR</option>
+        <option value="PA" <%= addr.state==='PA'?'selected':'' %>>PA</option>
+        <option value="RI" <%= addr.state==='RI'?'selected':'' %>>RI</option>
+        <option value="SC" <%= addr.state==='SC'?'selected':'' %>>SC</option>
+        <option value="SD" <%= addr.state==='SD'?'selected':'' %>>SD</option>
+        <option value="TN" <%= addr.state==='TN'?'selected':'' %>>TN</option>
+        <option value="TX" <%= addr.state==='TX'?'selected':'' %>>TX</option>
+        <option value="UT" <%= addr.state==='UT'?'selected':'' %>>UT</option>
+        <option value="VT" <%= addr.state==='VT'?'selected':'' %>>VT</option>
+        <option value="VA" <%= addr.state==='VA'?'selected':'' %>>VA</option>
+        <option value="WA" <%= addr.state==='WA'?'selected':'' %>>WA</option>
+        <option value="WV" <%= addr.state==='WV'?'selected':'' %>>WV</option>
+        <option value="WI" <%= addr.state==='WI'?'selected':'' %>>WI</option>
+        <option value="WY" <%= addr.state==='WY'?'selected':'' %>>WY</option>
+        <option value="DC" <%= addr.state==='DC'?'selected':'' %>>DC</option>
+      </optgroup>
+      <optgroup label="US Territories" class="opts-usa">
+        <option value="AS" <%= addr.state==='AS'?'selected':'' %>>AS</option>
+        <option value="GU" <%= addr.state==='GU'?'selected':'' %>>GU</option>
+        <option value="MP" <%= addr.state==='MP'?'selected':'' %>>MP</option>
+        <option value="PR" <%= addr.state==='PR'?'selected':'' %>>PR</option>
+        <option value="VI" <%= addr.state==='VI'?'selected':'' %>>VI</option>
+      </optgroup>
+      <optgroup label="Canadian Provinces" class="opts-canada">
+        <option value="AB" <%= addr.state==='AB'?'selected':'' %>>AB</option>
+        <option value="BC" <%= addr.state==='BC'?'selected':'' %>>BC</option>
+        <option value="MB" <%= addr.state==='MB'?'selected':'' %>>MB</option>
+        <option value="NB" <%= addr.state==='NB'?'selected':'' %>>NB</option>
+        <option value="NL" <%= addr.state==='NL'?'selected':'' %>>NL</option>
+        <option value="NS" <%= addr.state==='NS'?'selected':'' %>>NS</option>
+        <option value="NT" <%= addr.state==='NT'?'selected':'' %>>NT</option>
+        <option value="NU" <%= addr.state==='NU'?'selected':'' %>>NU</option>
+        <option value="ON" <%= addr.state==='ON'?'selected':'' %>>ON</option>
+        <option value="PE" <%= addr.state==='PE'?'selected':'' %>>PE</option>
+        <option value="QC" <%= addr.state==='QC'?'selected':'' %>>QC</option>
+        <option value="SK" <%= addr.state==='SK'?'selected':'' %>>SK</option>
+        <option value="YT" <%= addr.state==='YT'?'selected':'' %>>YT</option>
+      </optgroup>
+    </select>
   </div>
   <div class="col-4 mb-3">
     <label class="form-label">ZIP Code</label>
     <input type="text" name="postal_code" class="form-control" value="<%= addr.postal_code || '' %>">
   </div>
 </div>
-<div class="mb-3">
-  <label class="form-label">Country</label>
-  <input type="text" name="country" class="form-control" value="<%= addr.country || '' %>">
-</div>
+
+<script>
+(function () {
+  // Find the closest form and scope all selectors to it
+  var scripts = document.querySelectorAll('script');
+  var me = scripts[scripts.length - 1];
+  var container = me.closest('.modal-body') || me.closest('form') || me.parentElement;
+
+  var countryEl = container.querySelector('.addr-country');
+  var stateEl   = container.querySelector('.addr-state-select');
+  var labelEl   = container.querySelector('.addr-state-label');
+
+  var usaGroups    = container.querySelectorAll('.opts-usa');
+  var canadaGroups = container.querySelectorAll('.opts-canada');
+
+  function applyCountry(country) {
+    usaGroups.forEach(function(g)    { g.style.display = country === 'USA'    ? '' : 'none'; });
+    canadaGroups.forEach(function(g) { g.style.display = country === 'Canada' ? '' : 'none'; });
+
+    if (country === 'USA') {
+      labelEl.textContent = 'State';
+    } else if (country === 'Canada') {
+      labelEl.textContent = 'Province';
+    } else {
+      labelEl.textContent = 'State / Province';
+    }
+
+    // Reset state selection if it doesn't belong to the new country
+    var usaCodes    = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC','AS','GU','MP','PR','VI'];
+    var canadaCodes = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
+    var cur = stateEl.value;
+    if (country === 'USA'    && canadaCodes.indexOf(cur) !== -1) stateEl.value = '';
+    if (country === 'Canada' && usaCodes.indexOf(cur)    !== -1) stateEl.value = '';
+  }
+
+  applyCountry(countryEl.value);
+  countryEl.addEventListener('change', function () { applyCountry(this.value); });
+})();
+</script>
