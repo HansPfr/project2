@@ -14,25 +14,9 @@
   </button>
 </div>
 
-<% if (success || query_success) { %>
-  <div class="alert alert-success"><%= success || query_success %></div>
+<% if (success) { %>
+  <div class="alert alert-success"><%= success %></div>
 <% } %>
-
-<% const qs = locals.success; %>
-<% if (typeof locals !== 'undefined' && typeof locals.success === 'undefined' && typeof query !== 'undefined') { %>
-<% } %>
-
-<script>
-  const qsSuccess = new URLSearchParams(window.location.search).get('success');
-  if (qsSuccess) {
-    document.addEventListener('DOMContentLoaded', () => {
-      const el = document.createElement('div');
-      el.className = 'alert alert-success';
-      el.textContent = qsSuccess;
-      document.querySelector('.container').insertBefore(el, document.querySelector('.container').children[2]);
-    });
-  }
-</script>
 
 <% if (addresses.length === 0) { %>
   <div class="text-muted">No addresses added yet.</div>

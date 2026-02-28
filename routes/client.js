@@ -30,7 +30,7 @@ router.post('/personal', (req, res) => {
 // Addresses
 router.get('/addresses', (req, res) => {
   const addresses = db.prepare('SELECT * FROM addresses WHERE client_id = ?').all(req.session.clientId);
-  res.render('client/addresses', { addresses, success: null, error: null });
+  res.render('client/addresses', { addresses, success: req.query.success || null, error: null });
 });
 
 router.post('/addresses', (req, res) => {
