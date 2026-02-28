@@ -18,26 +18,26 @@
 
 <div class="card shadow-sm" style="max-width: 500px;">
   <div class="card-body">
-    <form method="post" action="/admin/clients/<%= client.id %>/edit">
+    <form method="post" action="/admin/clients/<%= record.id %>/edit">
       <div class="mb-3">
         <label class="form-label">Username <span class="text-danger">*</span></label>
         <input type="text" name="username" class="form-control"
-               value="<%= client.username %>" required>
+               value="<%= record.username %>" required>
       </div>
       <div class="mb-3">
         <label class="form-label">First Name</label>
         <input type="text" name="first_name" class="form-control"
-               value="<%= client.first_name || '' %>">
+               value="<%= record.first_name || '' %>">
       </div>
       <div class="mb-3">
         <label class="form-label">Last Name</label>
         <input type="text" name="last_name" class="form-control"
-               value="<%= client.last_name || '' %>">
+               value="<%= record.last_name || '' %>">
       </div>
       <div class="mb-3">
         <label class="form-label">Date of Birth</label>
         <input type="date" name="date_of_birth" class="form-control"
-               value="<%= client.date_of_birth || '' %>">
+               value="<%= record.date_of_birth || '' %>">
       </div>
       <hr>
       <div class="mb-3">

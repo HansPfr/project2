@@ -35,19 +35,19 @@ router.post('/clients/new', (req, res) => {
 
 // Edit client
 router.get('/clients/:id/edit', (req, res) => {
-  const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id);
-  if (!client) return res.redirect('/admin/dashboard');
-  res.render('admin/edit', { client, error: null, success: null });
+  const record = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id);
+  if (!record) return res.redirect('/admin/dashboard');
+  res.render('admin/edit', { record, error: null, success: null });
 });
 
 router.post('/clients/:id/edit', (req, res) => {
   const { username, first_name, last_name, date_of_birth, password } = req.body;
-  const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id);
-  if (!client) return res.redirect('/admin/dashboard');
+  const record = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id);
+  if (!record) return res.redirect('/admin/dashboard');
 
   const conflict = db.prepare('SELECT id FROM clients WHERE username = ? AND id != ?').get(username, req.params.id);
   if (conflict) {
-    return res.render('admin/edit', { client, error: `Username "${username}" is already taken.`, success: null });
+    return res.render('admin/edit', { record, error: `Username "${username}" is already taken.`, success: null });
   }
 
   db.prepare('UPDATE clients SET username = ?, first_name = ?, last_name = ?, date_of_birth = ? WHERE id = ?')
@@ -59,7 +59,7 @@ router.post('/clients/:id/edit', (req, res) => {
   }
 
   const updated = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id);
-  res.render('admin/edit', { client: updated, error: null, success: 'Client updated successfully.' });
+  res.render('admin/edit', { record: updated, error: null, success: 'Client updated successfully.' });
 });
 
 // Delete client
