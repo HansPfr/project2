@@ -29,7 +29,9 @@ db.exec(`
     client_id INTEGER NOT NULL,
     type TEXT DEFAULT 'home',
     street TEXT,
+    street2 TEXT,
     city TEXT,
+    state TEXT,
     postal_code TEXT,
     country TEXT,
     FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
@@ -51,6 +53,11 @@ db.exec(`
     FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
   );
 `);
+
+// Add new address columns if they don't exist yet (migration)
+const addrCols = db.prepare("PRAGMA table_info(addresses)").all().map(c => c.name);
+if (!addrCols.includes('street2')) db.exec("ALTER TABLE addresses ADD COLUMN street2 TEXT");
+if (!addrCols.includes('state'))   db.exec("ALTER TABLE addresses ADD COLUMN state TEXT");
 
 // Seed default admin if none exists
 const adminCount = db.prepare('SELECT COUNT(*) as count FROM admins').get();

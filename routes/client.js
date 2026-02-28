@@ -34,21 +34,21 @@ router.get('/addresses', (req, res) => {
 });
 
 router.post('/addresses', (req, res) => {
-  const { type, street, city, postal_code, country } = req.body;
+  const { type, street, street2, city, state, postal_code, country } = req.body;
   db.prepare(
-    'INSERT INTO addresses (client_id, type, street, city, postal_code, country) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run(req.session.clientId, type, street, city, postal_code, country);
+    'INSERT INTO addresses (client_id, type, street, street2, city, state, postal_code, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(req.session.clientId, type, street, street2 || null, city, state || null, postal_code, country);
   res.redirect('/client/addresses?success=Address+added.');
 });
 
 router.post('/addresses/:id/edit', (req, res) => {
-  const { type, street, city, postal_code, country } = req.body;
+  const { type, street, street2, city, state, postal_code, country } = req.body;
   const addr = db.prepare('SELECT * FROM addresses WHERE id = ? AND client_id = ?')
     .get(req.params.id, req.session.clientId);
   if (!addr) return res.redirect('/client/addresses');
   db.prepare(
-    'UPDATE addresses SET type = ?, street = ?, city = ?, postal_code = ?, country = ? WHERE id = ?'
-  ).run(type, street, city, postal_code, country, req.params.id);
+    'UPDATE addresses SET type = ?, street = ?, street2 = ?, city = ?, state = ?, postal_code = ?, country = ? WHERE id = ?'
+  ).run(type, street, street2 || null, city, state || null, postal_code, country, req.params.id);
   res.redirect('/client/addresses?success=Address+updated.');
 });
 

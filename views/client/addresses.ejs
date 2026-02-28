@@ -28,7 +28,8 @@
           <div class="card-body">
             <span class="badge bg-secondary mb-2"><%= addr.type %></span>
             <p class="mb-1"><%= addr.street %></p>
-            <p class="mb-1"><%= addr.postal_code %> <%= addr.city %></p>
+            <% if (addr.street2) { %><p class="mb-1"><%= addr.street2 %></p><% } %>
+            <p class="mb-1"><%= addr.city %><%= addr.state ? ', ' + addr.state : '' %> <%= addr.postal_code %></p>
             <p class="mb-0"><%= addr.country %></p>
           </div>
           <div class="card-footer bg-transparent d-flex gap-2">
