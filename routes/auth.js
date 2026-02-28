@@ -14,7 +14,7 @@ router.post('/login', (req, res) => {
   const { username, password } = req.body;
 
   // Check admins first
-  const admin = db.prepare('SELECT * FROM admins WHERE username = ?').get(username);
+  const admin = db.prepare('SELECT * FROM admins WHERE username = ? COLLATE NOCASE').get(username);
   if (admin && bcrypt.compareSync(password, admin.password_hash)) {
     req.session.adminId = admin.id;
     req.session.adminName = admin.username;
@@ -22,7 +22,7 @@ router.post('/login', (req, res) => {
   }
 
   // Check clients
-  const client = db.prepare('SELECT * FROM clients WHERE username = ?').get(username);
+  const client = db.prepare('SELECT * FROM clients WHERE username = ? COLLATE NOCASE').get(username);
   if (client && bcrypt.compareSync(password, client.password_hash)) {
     req.session.clientId = client.id;
     req.session.clientName = client.first_name || client.username;

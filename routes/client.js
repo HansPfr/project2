@@ -7,14 +7,14 @@ router.use(requireClient);
 
 // Dashboard
 router.get('/dashboard', (req, res) => {
-  const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.session.clientId);
-  res.render('client/dashboard', { client });
+  const record = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.session.clientId);
+  res.render('client/dashboard', { record });
 });
 
 // Personal data
 router.get('/personal', (req, res) => {
-  const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.session.clientId);
-  res.render('client/personal', { client, success: null, error: null });
+  const record = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.session.clientId);
+  res.render('client/personal', { record, success: null, error: null });
 });
 
 router.post('/personal', (req, res) => {
@@ -23,8 +23,8 @@ router.post('/personal', (req, res) => {
     'UPDATE clients SET first_name = ?, last_name = ?, date_of_birth = ? WHERE id = ?'
   ).run(first_name, last_name, date_of_birth || null, req.session.clientId);
   req.session.clientName = first_name || req.session.clientName;
-  const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.session.clientId);
-  res.render('client/personal', { client, success: 'Personal data updated.', error: null });
+  const record = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.session.clientId);
+  res.render('client/personal', { record, success: 'Personal data updated.', error: null });
 });
 
 // Addresses

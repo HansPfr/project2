@@ -22,21 +22,21 @@
       <div class="mb-3">
         <label class="form-label">First Name</label>
         <input type="text" name="first_name" class="form-control"
-               value="<%= client.first_name || '' %>">
+               value="<%= record.first_name || '' %>">
       </div>
       <div class="mb-3">
         <label class="form-label">Last Name</label>
         <input type="text" name="last_name" class="form-control"
-               value="<%= client.last_name || '' %>">
+               value="<%= record.last_name || '' %>">
       </div>
       <div class="mb-3">
         <label class="form-label">Date of Birth</label>
         <input type="date" name="date_of_birth" class="form-control"
-               value="<%= client.date_of_birth || '' %>">
+               value="<%= record.date_of_birth || '' %>">
       </div>
       <div class="mb-3">
         <label class="form-label text-muted">Username</label>
-        <input type="text" class="form-control" value="<%= client.username %>" disabled>
+        <input type="text" class="form-control" value="<%= record.username %>" disabled>
       </div>
       <button type="submit" class="btn btn-primary">Save Changes</button>
       <a href="/client/dashboard" class="btn btn-link">Cancel</a>
