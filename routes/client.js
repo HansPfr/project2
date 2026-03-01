@@ -1,5 +1,6 @@
 const express = require('express');
 const https = require('https');
+const dns   = require('dns').promises;
 const db = require('../db/database');
 const { requireClient } = require('../middleware/auth');
 const router = express.Router();
@@ -213,19 +214,61 @@ router.post('/contacts/phones/:id/delete', (req, res) => {
   res.redirect('/client/contacts?success=Phone+number+deleted.');
 });
 
+// Email validation helpers
+const EMAIL_REGEX = /^[^\s@]+@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+
+async function checkMx(domain) {
+  try {
+    const records = await Promise.race([
+      dns.resolveMx(domain),
+      new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error(), { code: 'ETIMEOUT' })), 5000))
+    ]);
+    return records && records.length > 0 ? 'ok' : 'no_mx';
+  } catch (e) {
+    if (e.code === 'ENOTFOUND')  return 'no_domain';
+    if (e.code === 'ENODATA')    return 'no_mx';
+    return 'timeout'; // network issue – give benefit of the doubt
+  }
+}
+
+async function validateEmailServer(address) {
+  const val = (address || '').trim();
+  if (!val) return 'Email address cannot be empty.';
+  if (!EMAIL_REGEX.test(val)) return `"${val}" is not a valid email address.`;
+  const domain = val.split('@')[1];
+  const mx = await checkMx(domain);
+  if (mx === 'no_domain') return `Domain "${domain}" does not exist.`;
+  if (mx === 'no_mx')     return `Domain "${domain}" has no mail servers — email cannot be delivered.`;
+  return null; // valid
+}
+
+// Live domain check endpoint (called by client-side JS)
+router.get('/contacts/emails/check-domain', async (req, res) => {
+  const domain = (req.query.domain || '').trim().toLowerCase();
+  if (!domain || !/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain)) {
+    return res.json({ status: 'invalid' });
+  }
+  const result = await checkMx(domain);
+  res.json({ status: result });
+});
+
 // Email routes
-router.post('/contacts/emails', (req, res) => {
+router.post('/contacts/emails', async (req, res) => {
   const { type, address } = req.body;
+  const err = await validateEmailServer(address);
+  if (err) return res.redirect('/client/contacts?error=' + encodeURIComponent(err));
   db.prepare('INSERT INTO email_addresses (client_id, type, address) VALUES (?, ?, ?)')
     .run(req.session.clientId, type, address);
   res.redirect('/client/contacts?success=Email+address+added.');
 });
 
-router.post('/contacts/emails/:id/edit', (req, res) => {
+router.post('/contacts/emails/:id/edit', async (req, res) => {
   const { type, address } = req.body;
   const email = db.prepare('SELECT * FROM email_addresses WHERE id = ? AND client_id = ?')
     .get(req.params.id, req.session.clientId);
   if (!email) return res.redirect('/client/contacts');
+  const err = await validateEmailServer(address);
+  if (err) return res.redirect('/client/contacts?error=' + encodeURIComponent(err));
   db.prepare('UPDATE email_addresses SET type = ?, address = ? WHERE id = ?')
     .run(type, address, req.params.id);
   res.redirect('/client/contacts?success=Email+address+updated.');

@@ -2,10 +2,168 @@
   <label class="form-label">Type</label>
   <select name="type" class="form-select">
     <option value="personal" <%= (item.type === 'personal' || !item.type) ? 'selected' : '' %>>Personal</option>
-    <option value="work" <%= item.type === 'work' ? 'selected' : '' %>>Work</option>
+    <option value="work"     <%= item.type === 'work'     ? 'selected' : '' %>>Work</option>
   </select>
 </div>
+
 <div class="mb-3">
-  <label class="form-label">Email Address</label>
-  <input type="email" name="address" class="form-control" value="<%= item.address || '' %>" required>
+  <label class="form-label">Email Address <span class="text-danger">*</span></label>
+  <div class="input-group">
+    <input type="email" name="address" class="form-control email-input"
+           value="<%= item.address || '' %>" autocomplete="off" required>
+    <span class="input-group-text email-status-icon" style="min-width:2.5rem; justify-content:center;">
+      <!-- icon injected by JS -->
+    </span>
+  </div>
+  <div class="invalid-feedback email-error"></div>
+  <div class="form-text email-hint mt-1"></div>
 </div>
+
+<script>
+(function () {
+  var scripts   = document.querySelectorAll('script');
+  var me        = scripts[scripts.length - 1];
+  var container = me.closest('.modal-body') || me.closest('form') || me.parentElement;
+
+  var input     = container.querySelector('.email-input');
+  var iconEl    = container.querySelector('.email-status-icon');
+  var errorEl   = container.querySelector('.email-error');
+  var hintEl    = container.querySelector('.email-hint');
+
+  // ── Format validation ────────────────────────────────────────────────────
+  // Returns an error string, or null if format looks good
+  function formatError(val) {
+    if (!val) return null; // let `required` handle empty
+
+    var at = val.indexOf('@');
+    if (at < 1)                          return 'Missing "@" — enter a full address like name@example.com';
+    if (at === val.length - 1)           return 'Missing domain after "@"';
+
+    var local  = val.slice(0, at);
+    var domain = val.slice(at + 1);
+
+    if (/\s/.test(val))                  return 'Spaces are not allowed in an email address';
+    if (local.length > 64)               return 'The part before "@" is too long (max 64 characters)';
+
+    var parts = domain.split('.');
+    if (parts.length < 2)                return 'Domain needs at least one dot — e.g. example.com';
+    if (parts.some(function(p){ return p.length === 0; }))
+                                         return 'Domain "' + domain + '" has empty sections (double dots?)';
+
+    var tld = parts[parts.length - 1];
+    if (!/^[a-zA-Z]{2,}$/.test(tld))    return 'The domain ending ".' + tld + '" doesn\'t look like a valid TLD';
+
+    // Full pattern check
+    if (!/^[^\s@]+@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/.test(val)) {
+      return 'Email address format is not valid';
+    }
+    return null;
+  }
+
+  // ── State helpers ────────────────────────────────────────────────────────
+  function clearState() {
+    input.classList.remove('is-valid', 'is-invalid');
+    iconEl.innerHTML   = '';
+    errorEl.textContent = '';
+    hintEl.textContent  = '';
+  }
+  function setOk(hint) {
+    input.classList.remove('is-invalid');
+    input.classList.add('is-valid');
+    iconEl.innerHTML    = '<i class="bi bi-check-lg text-success"></i>';
+    errorEl.textContent = '';
+    hintEl.textContent  = hint || '';
+  }
+  function setErr(msg) {
+    input.classList.remove('is-valid');
+    input.classList.add('is-invalid');
+    iconEl.innerHTML    = '<i class="bi bi-x-lg text-danger"></i>';
+    errorEl.textContent = msg;
+    hintEl.textContent  = '';
+  }
+  function setChecking() {
+    input.classList.remove('is-valid', 'is-invalid');
+    iconEl.innerHTML    = '<span class="spinner-border spinner-border-sm text-secondary" role="status"></span>';
+    errorEl.textContent = '';
+    hintEl.textContent  = 'Checking domain…';
+  }
+
+  // ── Domain MX check (calls backend, result cached per domain) ────────────
+  var domainCache = {};
+  var domainTimer;
+
+  function checkDomain(domain, onDone) {
+    if (domainCache[domain] !== undefined) { onDone(domainCache[domain]); return; }
+    setChecking();
+    fetch('/client/contacts/emails/check-domain?domain=' + encodeURIComponent(domain))
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        domainCache[domain] = data.status;
+        onDone(data.status);
+      })
+      .catch(function(){ onDone('timeout'); });
+  }
+
+  // ── Main validate function ───────────────────────────────────────────────
+  function validate(show, andCheckDomain) {
+    var val = input.value.trim();
+    if (!val) { clearState(); return true; }
+
+    var err = formatError(val);
+    if (err) {
+      if (show) setErr(err);
+      else input.classList.remove('is-valid', 'is-invalid');
+      return false;
+    }
+
+    // Format is good — optionally verify the domain has MX records
+    if (andCheckDomain) {
+      var domain = val.split('@')[1];
+      clearTimeout(domainTimer);
+      domainTimer = setTimeout(function () {
+        checkDomain(domain, function (status) {
+          if (status === 'ok' || status === 'timeout') {
+            setOk(status === 'timeout' ? 'Format is valid (domain check timed out)' : '');
+          } else if (status === 'no_domain') {
+            setErr('Domain "' + domain + '" does not exist');
+          } else if (status === 'no_mx') {
+            setErr('Domain "' + domain + '" has no mail servers — email cannot be delivered');
+          } else {
+            setOk(); // unknown status – be lenient
+          }
+        });
+      }, 400); // debounce
+    } else {
+      setOk();
+    }
+    return true;
+  }
+
+  // ── Events ───────────────────────────────────────────────────────────────
+  input.addEventListener('input', function () {
+    clearTimeout(domainTimer);
+    validate(true, false); // instant format check only while typing
+  });
+
+  input.addEventListener('blur', function () {
+    validate(true, true); // format + domain check on leave
+  });
+
+  var form = container.closest('form');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      var val = input.value.trim();
+      if (!val) return; // let `required` handle it
+      if (formatError(val)) {
+        validate(true, false);
+        e.preventDefault();
+      }
+      // Allow submit even if domain check is still pending –
+      // the server will do the authoritative MX check.
+    });
+  }
+
+  // Initialise: if editing an existing address, validate it immediately
+  if (input.value.trim()) validate(true, true);
+})();
+</script>
