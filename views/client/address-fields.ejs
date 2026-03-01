@@ -16,7 +16,10 @@
 </div>
 <div class="mb-3">
   <label class="form-label">Street <span class="text-danger">*</span></label>
-  <input type="text" name="street" class="form-control" value="<%= addr.street || '' %>" required>
+  <div class="position-relative">
+    <input type="text" name="street" class="form-control addr-street" value="<%= addr.street || '' %>" autocomplete="off" required>
+    <div class="addr-suggestions list-group" style="display:none; position:absolute; z-index:1060; width:100%; max-height:200px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,.15);"></div>
+  </div>
 </div>
 <div class="mb-3">
   <label class="form-label">Apt, Suite, etc. <span class="text-muted">(optional)</span></label>
@@ -148,5 +151,76 @@
 
   applyCountry(countryEl.value);
   countryEl.addEventListener('change', function () { applyCountry(this.value); });
+
+  // --- Street autocomplete ---
+  var streetInput   = container.querySelector('.addr-street');
+  var suggestionsEl = container.querySelector('.addr-suggestions');
+  var cityEl        = container.querySelector('[name="city"]');
+  var postalEl      = container.querySelector('[name="postal_code"]');
+  var debounceTimer;
+
+  function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  streetInput.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    var q = this.value.trim();
+    if (q.length < 2) {
+      suggestionsEl.style.display = 'none';
+      suggestionsEl.innerHTML = '';
+      return;
+    }
+    debounceTimer = setTimeout(function () {
+      fetch('/client/addresses/autocomplete?q=' + encodeURIComponent(q))
+        .then(function (r) { return r.json(); })
+        .then(function (results) {
+          if (!results.length) {
+            suggestionsEl.style.display = 'none';
+            suggestionsEl.innerHTML = '';
+            return;
+          }
+          suggestionsEl.innerHTML = results.map(function (a) {
+            var label = escHtml(a.street);
+            if (a.city)        label += ', ' + escHtml(a.city);
+            if (a.state)       label += ' ' + escHtml(a.state);
+            if (a.postal_code) label += ' ' + escHtml(a.postal_code);
+            return '<button type="button" class="list-group-item list-group-item-action py-1 small"' +
+              ' data-street="'  + escAttr(a.street       || '') + '"' +
+              ' data-city="'    + escAttr(a.city         || '') + '"' +
+              ' data-state="'   + escAttr(a.state        || '') + '"' +
+              ' data-postal="'  + escAttr(a.postal_code  || '') + '"' +
+              ' data-country="' + escAttr(a.country      || '') + '">' +
+              label + '</button>';
+          }).join('');
+          suggestionsEl.style.display = '';
+        });
+    }, 250);
+  });
+
+  suggestionsEl.addEventListener('mousedown', function (e) {
+    var btn = e.target.closest('button[data-street]');
+    if (!btn) return;
+    e.preventDefault(); // keep focus on street input long enough to populate
+    streetInput.value = btn.dataset.street;
+    if (cityEl)   cityEl.value   = btn.dataset.city;
+    if (postalEl) postalEl.value = btn.dataset.postal;
+    if (btn.dataset.country) {
+      countryEl.value = btn.dataset.country;
+      applyCountry(btn.dataset.country);
+    }
+    if (btn.dataset.state) stateEl.value = btn.dataset.state;
+    suggestionsEl.style.display = 'none';
+  });
+
+  streetInput.addEventListener('blur', function () {
+    // small delay so a click on a suggestion fires first
+    setTimeout(function () { suggestionsEl.style.display = 'none'; }, 150);
+  });
+
+  streetInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      suggestionsEl.style.display = 'none';
+    }
+  });
 })();
 </script>

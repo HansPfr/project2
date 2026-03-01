@@ -27,6 +27,20 @@ router.post('/personal', (req, res) => {
   res.render('client/personal', { record, success: 'Personal data updated.', error: null });
 });
 
+// Address autocomplete – searches all known streets across all clients
+router.get('/addresses/autocomplete', (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (q.length < 2) return res.json([]);
+  const rows = db.prepare(
+    `SELECT DISTINCT street, city, state, postal_code, country
+     FROM addresses
+     WHERE street LIKE ?
+     ORDER BY street
+     LIMIT 10`
+  ).all(q + '%');
+  res.json(rows);
+});
+
 // Addresses
 router.get('/addresses', (req, res) => {
   const addresses = db.prepare('SELECT * FROM addresses WHERE client_id = ?').all(req.session.clientId);
