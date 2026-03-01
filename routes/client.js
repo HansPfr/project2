@@ -141,28 +141,69 @@ router.post('/addresses/:id/delete', (req, res) => {
   res.redirect('/client/addresses?success=Address+deleted.');
 });
 
+// Digit-count rules matching the client-side COUNTRIES table in phone-fields.ejs
+const PHONE_RULES = {
+  '+1':'+1','+7':'+7','+27':'+27','+31':'+31','+32':'+32','+33':'+33',
+  '+34':'+34','+39':'+39','+41':'+41','+43':'+43','+44':'+44','+45':'+45',
+  '+46':'+46','+47':'+47','+48':'+48','+49':'+49','+52':'+52','+55':'+55',
+  '+60':'+60','+61':'+61','+62':'+62','+63':'+63','+64':'+64','+65':'+65',
+  '+81':'+81','+82':'+82','+86':'+86','+90':'+90','+91':'+91',
+  '+966':'+966','+971':'+971','+972':'+972'
+};
+const PHONE_DIGIT_LIMITS = {
+  '+1':{min:10,max:10},'+7':{min:10,max:10},'+27':{min:9,max:9},
+  '+31':{min:9,max:9},'+32':{min:8,max:9},'+33':{min:9,max:9},
+  '+34':{min:9,max:9},'+39':{min:9,max:11},'+41':{min:9,max:9},
+  '+43':{min:7,max:13},'+44':{min:10,max:10},'+45':{min:8,max:8},
+  '+46':{min:9,max:9},'+47':{min:8,max:8},'+48':{min:9,max:9},
+  '+49':{min:10,max:11},'+52':{min:10,max:10},'+55':{min:10,max:11},
+  '+60':{min:9,max:10},'+61':{min:9,max:9},'+62':{min:8,max:12},
+  '+63':{min:10,max:10},'+64':{min:8,max:10},'+65':{min:8,max:8},
+  '+81':{min:10,max:11},'+82':{min:9,max:10},'+86':{min:11,max:11},
+  '+90':{min:10,max:10},'+91':{min:10,max:10},'+966':{min:9,max:9},
+  '+971':{min:9,max:9},'+972':{min:9,max:9}
+};
+
+function validatePhoneServer(dialCode, number) {
+  const digits = (number || '').replace(/\D/g, '');
+  if (!digits) return 'Phone number cannot be empty.';
+  const rule = PHONE_DIGIT_LIMITS[dialCode];
+  if (!rule) return null; // unknown dial code – accept as-is
+  if (digits.length < rule.min) return `Too short for ${dialCode} (need ${rule.min} digits, got ${digits.length}).`;
+  if (digits.length > rule.max) return `Too long for ${dialCode} (max ${rule.max} digits, got ${digits.length}).`;
+  return null;
+}
+
 // Contacts (phones & emails)
 router.get('/contacts', (req, res) => {
   const phones = db.prepare('SELECT * FROM phone_numbers WHERE client_id = ?').all(req.session.clientId);
   const emails = db.prepare('SELECT * FROM email_addresses WHERE client_id = ?').all(req.session.clientId);
-  res.render('client/contacts', { phones, emails, success: req.query.success || null, error: null });
+  res.render('client/contacts', {
+    phones, emails,
+    success: req.query.success || null,
+    error:   req.query.error   || null
+  });
 });
 
 // Phone routes
 router.post('/contacts/phones', (req, res) => {
-  const { type, number } = req.body;
-  db.prepare('INSERT INTO phone_numbers (client_id, type, number) VALUES (?, ?, ?)')
-    .run(req.session.clientId, type, number);
+  const { type, number, dial_code } = req.body;
+  const err = validatePhoneServer(dial_code, number);
+  if (err) return res.redirect('/client/contacts?error=' + encodeURIComponent(err));
+  db.prepare('INSERT INTO phone_numbers (client_id, type, dial_code, number) VALUES (?, ?, ?, ?)')
+    .run(req.session.clientId, type, dial_code || '+1', number);
   res.redirect('/client/contacts?success=Phone+number+added.');
 });
 
 router.post('/contacts/phones/:id/edit', (req, res) => {
-  const { type, number } = req.body;
+  const { type, number, dial_code } = req.body;
   const phone = db.prepare('SELECT * FROM phone_numbers WHERE id = ? AND client_id = ?')
     .get(req.params.id, req.session.clientId);
   if (!phone) return res.redirect('/client/contacts');
-  db.prepare('UPDATE phone_numbers SET type = ?, number = ? WHERE id = ?')
-    .run(type, number, req.params.id);
+  const err = validatePhoneServer(dial_code, number);
+  if (err) return res.redirect('/client/contacts?error=' + encodeURIComponent(err));
+  db.prepare('UPDATE phone_numbers SET type = ?, dial_code = ?, number = ? WHERE id = ?')
+    .run(type, dial_code || '+1', number, req.params.id);
   res.redirect('/client/contacts?success=Phone+number+updated.');
 });
 

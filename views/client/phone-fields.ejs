@@ -2,11 +2,154 @@
   <label class="form-label">Type</label>
   <select name="type" class="form-select">
     <option value="mobile" <%= (item.type === 'mobile' || !item.type) ? 'selected' : '' %>>Mobile</option>
-    <option value="home" <%= item.type === 'home' ? 'selected' : '' %>>Home</option>
-    <option value="work" <%= item.type === 'work' ? 'selected' : '' %>>Work</option>
+    <option value="home"   <%= item.type === 'home'   ? 'selected' : '' %>>Home</option>
+    <option value="work"   <%= item.type === 'work'   ? 'selected' : '' %>>Work</option>
   </select>
 </div>
+
 <div class="mb-3">
-  <label class="form-label">Number</label>
-  <input type="tel" name="number" class="form-control" value="<%= item.number || '' %>" required>
+  <label class="form-label">Country Code <span class="text-danger">*</span></label>
+  <select name="dial_code" class="form-select phone-dial"
+          data-selected="<%= item.dial_code || '+1' %>"></select>
 </div>
+
+<div class="mb-3">
+  <label class="form-label">Number <span class="text-danger">*</span></label>
+  <input type="tel" name="number" class="form-control phone-number"
+         value="<%= item.number || '' %>" autocomplete="off" required>
+  <div class="invalid-feedback phone-error"></div>
+  <div class="form-text phone-hint mt-1"></div>
+</div>
+
+<script>
+(function () {
+  var scripts   = document.querySelectorAll('script');
+  var me        = scripts[scripts.length - 1];
+  var container = me.closest('.modal-body') || me.closest('form') || me.parentElement;
+
+  var dialSelect  = container.querySelector('.phone-dial');
+  var numberInput = container.querySelector('.phone-number');
+  var hintEl      = container.querySelector('.phone-hint');
+  var errorEl     = container.querySelector('.phone-error');
+
+  // ── Country data ──────────────────────────────────────────────────────────
+  var COUNTRIES = [
+    { code:'+1',   flag:'🇺🇸', name:'United States / Canada', ph:'(555) 555-5555', hint:'10 digits',       min:10, max:10 },
+    { code:'+7',   flag:'🇷🇺', name:'Russia / Kazakhstan',    ph:'912 345-67-89',  hint:'10 digits',       min:10, max:10 },
+    { code:'+27',  flag:'🇿🇦', name:'South Africa',           ph:'71 123 4567',    hint:'9 digits',        min: 9, max: 9 },
+    { code:'+31',  flag:'🇳🇱', name:'Netherlands',            ph:'6 12345678',     hint:'9 digits',        min: 9, max: 9 },
+    { code:'+32',  flag:'🇧🇪', name:'Belgium',                ph:'470 12 34 56',   hint:'8–9 digits',      min: 8, max: 9 },
+    { code:'+33',  flag:'🇫🇷', name:'France',                 ph:'6 12 34 56 78',  hint:'9 digits',        min: 9, max: 9 },
+    { code:'+34',  flag:'🇪🇸', name:'Spain',                  ph:'612 345 678',    hint:'9 digits',        min: 9, max: 9 },
+    { code:'+39',  flag:'🇮🇹', name:'Italy',                  ph:'312 345 6789',   hint:'9–11 digits',     min: 9, max:11 },
+    { code:'+41',  flag:'🇨🇭', name:'Switzerland',            ph:'76 123 45 67',   hint:'9 digits',        min: 9, max: 9 },
+    { code:'+43',  flag:'🇦🇹', name:'Austria',                ph:'664 123456',     hint:'7–13 digits',     min: 7, max:13 },
+    { code:'+44',  flag:'🇬🇧', name:'United Kingdom',         ph:'7700 900000',    hint:'10 digits',       min:10, max:10 },
+    { code:'+45',  flag:'🇩🇰', name:'Denmark',                ph:'20 12 34 56',    hint:'8 digits',        min: 8, max: 8 },
+    { code:'+46',  flag:'🇸🇪', name:'Sweden',                 ph:'70 123 45 67',   hint:'9 digits',        min: 9, max: 9 },
+    { code:'+47',  flag:'🇳🇴', name:'Norway',                 ph:'412 34 567',     hint:'8 digits',        min: 8, max: 8 },
+    { code:'+48',  flag:'🇵🇱', name:'Poland',                 ph:'512 345 678',    hint:'9 digits',        min: 9, max: 9 },
+    { code:'+49',  flag:'🇩🇪', name:'Germany',                ph:'1512 3456789',   hint:'10–11 digits',    min:10, max:11 },
+    { code:'+52',  flag:'🇲🇽', name:'Mexico',                 ph:'55 1234 5678',   hint:'10 digits',       min:10, max:10 },
+    { code:'+55',  flag:'🇧🇷', name:'Brazil',                 ph:'11 91234-5678',  hint:'10–11 digits',    min:10, max:11 },
+    { code:'+60',  flag:'🇲🇾', name:'Malaysia',               ph:'12-345 6789',    hint:'9–10 digits',     min: 9, max:10 },
+    { code:'+61',  flag:'🇦🇺', name:'Australia',              ph:'412 345 678',    hint:'9 digits',        min: 9, max: 9 },
+    { code:'+62',  flag:'🇮🇩', name:'Indonesia',              ph:'812-345-678',    hint:'8–12 digits',     min: 8, max:12 },
+    { code:'+63',  flag:'🇵🇭', name:'Philippines',            ph:'917 123 4567',   hint:'10 digits',       min:10, max:10 },
+    { code:'+64',  flag:'🇳🇿', name:'New Zealand',            ph:'21 123 4567',    hint:'8–10 digits',     min: 8, max:10 },
+    { code:'+65',  flag:'🇸🇬', name:'Singapore',              ph:'8123 4567',      hint:'8 digits',        min: 8, max: 8 },
+    { code:'+81',  flag:'🇯🇵', name:'Japan',                  ph:'90-1234-5678',   hint:'10–11 digits',    min:10, max:11 },
+    { code:'+82',  flag:'🇰🇷', name:'South Korea',            ph:'10-1234-5678',   hint:'9–10 digits',     min: 9, max:10 },
+    { code:'+86',  flag:'🇨🇳', name:'China',                  ph:'131 2345 6789',  hint:'11 digits',       min:11, max:11 },
+    { code:'+90',  flag:'🇹🇷', name:'Turkey',                 ph:'532 123 4567',   hint:'10 digits',       min:10, max:10 },
+    { code:'+91',  flag:'🇮🇳', name:'India',                  ph:'98765 43210',    hint:'10 digits',       min:10, max:10 },
+    { code:'+966', flag:'🇸🇦', name:'Saudi Arabia',           ph:'51 234 5678',    hint:'9 digits',        min: 9, max: 9 },
+    { code:'+971', flag:'🇦🇪', name:'UAE',                    ph:'50 123 4567',    hint:'9 digits',        min: 9, max: 9 },
+    { code:'+972', flag:'🇮🇱', name:'Israel',                 ph:'50-123-4567',    hint:'9 digits',        min: 9, max: 9 },
+  ];
+
+  // Build <select> options dynamically (data lives in one place)
+  var preSelected = dialSelect.dataset.selected || '+1';
+  COUNTRIES.forEach(function (c) {
+    var opt = document.createElement('option');
+    opt.value = c.code;
+    opt.textContent = c.flag + ' ' + c.code + ' \u00B7 ' + c.name;
+    if (c.code === preSelected) opt.selected = true;
+    dialSelect.appendChild(opt);
+  });
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function getRule() {
+    return COUNTRIES.find(function (c) { return c.code === dialSelect.value; }) || null;
+  }
+
+  function applyCountry() {
+    var rule = getRule();
+    if (rule) {
+      numberInput.placeholder = rule.ph;
+      hintEl.textContent = 'Format: ' + rule.hint + ' — e.g. ' + rule.ph;
+    } else {
+      numberInput.placeholder = '';
+      hintEl.textContent = '';
+    }
+    // Re-validate live if the field already has a value
+    if (numberInput.value.trim()) validate(true);
+  }
+
+  function validate(show) {
+    var rule   = getRule();
+    var val    = numberInput.value.trim();
+    if (!val)   { clearState(); return true; }   // let HTML `required` handle empty
+    if (!rule)  { setOk();      return true; }   // unknown country – accept as-is
+
+    var digits = val.replace(/\D/g, '');
+    var n      = digits.length;
+
+    if (n < rule.min) {
+      if (show) setErr(
+        'Too short \u2014 ' + rule.hint + ' expected'
+        + ' (' + n + ' digit' + (n === 1 ? '' : 's') + ' entered)'
+      );
+      return false;
+    }
+    if (n > rule.max) {
+      if (show) setErr(
+        'Too long \u2014 ' + rule.hint + ' expected'
+        + ' (' + n + ' digits entered)'
+      );
+      return false;
+    }
+    setOk();
+    return true;
+  }
+
+  function clearState() {
+    numberInput.classList.remove('is-valid', 'is-invalid');
+    errorEl.textContent = '';
+  }
+  function setOk() {
+    numberInput.classList.remove('is-invalid');
+    numberInput.classList.add('is-valid');
+    errorEl.textContent = '';
+  }
+  function setErr(msg) {
+    numberInput.classList.remove('is-valid');
+    numberInput.classList.add('is-invalid');
+    errorEl.textContent = msg;
+  }
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  dialSelect.addEventListener('change', applyCountry);
+  numberInput.addEventListener('input', function () { validate(true); });
+  numberInput.addEventListener('blur',  function () { validate(true); });
+
+  var form = container.closest('form');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      if (!validate(true)) e.preventDefault();
+    });
+  }
+
+  applyCountry(); // initialise placeholder + hint on load
+})();
+</script>

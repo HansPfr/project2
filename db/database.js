@@ -59,6 +59,10 @@ const addrCols = db.prepare("PRAGMA table_info(addresses)").all().map(c => c.nam
 if (!addrCols.includes('street2')) db.exec("ALTER TABLE addresses ADD COLUMN street2 TEXT");
 if (!addrCols.includes('state'))   db.exec("ALTER TABLE addresses ADD COLUMN state TEXT");
 
+// Add dial_code to phone_numbers if it doesn't exist yet (migration)
+const phoneCols = db.prepare("PRAGMA table_info(phone_numbers)").all().map(c => c.name);
+if (!phoneCols.includes('dial_code')) db.exec("ALTER TABLE phone_numbers ADD COLUMN dial_code TEXT DEFAULT '+1'");
+
 // Seed default admin if none exists
 const adminCount = db.prepare('SELECT COUNT(*) as count FROM admins').get();
 if (adminCount.count === 0) {

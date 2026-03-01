@@ -10,15 +10,16 @@
 <h2 class="mb-4"><i class="bi bi-telephone-fill me-2 text-info"></i>Phone & Email</h2>
 
 <script>
-  const qsSuccess = new URLSearchParams(window.location.search).get('success');
-  if (qsSuccess) {
-    document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', () => {
+    const qs = new URLSearchParams(window.location.search);
+    const msg = qs.get('success') || qs.get('error');
+    if (msg) {
       const el = document.createElement('div');
-      el.className = 'alert alert-success';
-      el.textContent = qsSuccess;
+      el.className = qs.get('error') ? 'alert alert-danger' : 'alert alert-success';
+      el.textContent = msg;
       document.querySelector('h2').insertAdjacentElement('afterend', el);
-    });
-  }
+    }
+  });
 </script>
 
 <!-- Phone Numbers -->
@@ -41,7 +42,10 @@
         <% phones.forEach(p => { %>
           <tr>
             <td><span class="badge bg-secondary"><%= p.type %></span></td>
-            <td><%= p.number %></td>
+            <td>
+              <% if (p.dial_code) { %><span class="text-muted me-1"><%= p.dial_code %></span><% } %>
+              <%= p.number %>
+            </td>
             <td>
               <button class="btn btn-sm btn-outline-primary me-1"
                 data-bs-toggle="modal" data-bs-target="#editPhone<%= p.id %>">
