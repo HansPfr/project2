@@ -1,7 +1,61 @@
 const express = require('express');
+const https = require('https');
 const db = require('../db/database');
 const { requireClient } = require('../middleware/auth');
 const router = express.Router();
+
+// --- Nominatim (OpenStreetMap) address search ---
+const nominatimCache = new Map(); // simple in-memory cache to respect 1 req/s policy
+
+function nominatimSearch(q) {
+  const cacheKey = q.toLowerCase();
+  const cached = nominatimCache.get(cacheKey);
+  if (cached && Date.now() - cached.ts < 60_000) return Promise.resolve(cached.data);
+
+  return new Promise(resolve => {
+    const path = '/search?' + new URLSearchParams({
+      q, format: 'json', addressdetails: '1', limit: '8', countrycodes: 'us,ca'
+    });
+    https.get(
+      { hostname: 'nominatim.openstreetmap.org', path,
+        headers: { 'User-Agent': 'CustomerPortal/1.0', 'Accept-Language': 'en' } },
+      res => {
+        const chunks = [];
+        res.on('data', d => chunks.push(d));
+        res.on('end', () => {
+          try {
+            const data = JSON.parse(chunks.join(''));
+            nominatimCache.set(cacheKey, { data, ts: Date.now() });
+            resolve(data);
+          } catch { resolve([]); }
+        });
+      }
+    ).on('error', () => resolve([]));
+  });
+}
+
+function parseNominatim(items) {
+  const seen = new Set();
+  return items
+    .filter(r => r.address && r.address.house_number && r.address.road)
+    .map(r => {
+      const a = r.address;
+      const street      = `${a.house_number} ${a.road}`;
+      const city        = a.city || a.town || a.village || a.municipality || '';
+      const lvl4        = a['ISO3166-2-lvl4'] || '';
+      const state       = lvl4 ? lvl4.split('-').slice(1).join('-') : '';
+      const postal_code = a.postcode || '';
+      const country     = a.country_code === 'us' ? 'USA'
+                        : a.country_code === 'ca' ? 'Canada' : '';
+      return { street, city, state, postal_code, country };
+    })
+    .filter(a => {
+      const key = `${a.street}|${a.city}`.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
 
 router.use(requireClient);
 
@@ -27,18 +81,33 @@ router.post('/personal', (req, res) => {
   res.render('client/personal', { record, success: 'Personal data updated.', error: null });
 });
 
-// Address autocomplete – searches all known streets across all clients
-router.get('/addresses/autocomplete', (req, res) => {
-  const q = (req.query.q || '').trim();
-  if (q.length < 2) return res.json([]);
-  const rows = db.prepare(
-    `SELECT DISTINCT street, city, state, postal_code, country
-     FROM addresses
-     WHERE street LIKE ?
-     ORDER BY street
-     LIMIT 10`
-  ).all(q + '%');
-  res.json(rows);
+// Address autocomplete – local DB + Nominatim (OpenStreetMap)
+router.get('/addresses/autocomplete', async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (q.length < 2) return res.json([]);
+
+    // 1. Local DB: addresses already saved in this portal
+    const local = db.prepare(
+      `SELECT DISTINCT street, city, state, postal_code, country
+       FROM addresses WHERE street LIKE ? ORDER BY street LIMIT 5`
+    ).all(q + '%');
+
+    // 2. Public database: Nominatim / OpenStreetMap
+    const raw      = await nominatimSearch(q);
+    const external = parseNominatim(raw);
+
+    // 3. Merge – local first, then external not already represented locally
+    const localKeys = new Set(local.map(a => `${a.street}|${a.city}`.toLowerCase()));
+    const merged = [
+      ...local,
+      ...external.filter(a => !localKeys.has(`${a.street}|${a.city}`.toLowerCase()))
+    ].slice(0, 10);
+
+    res.json(merged);
+  } catch {
+    res.json([]);
+  }
 });
 
 // Addresses
