@@ -41,7 +41,7 @@ router.get('/clients/:id/edit', (req, res) => {
 });
 
 router.post('/clients/:id/edit', (req, res) => {
-  const { username, first_name, last_name, date_of_birth, password } = req.body;
+  const { username, first_name, last_name, date_of_birth, password, ein } = req.body;
   const record = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id);
   if (!record) return res.redirect('/admin/dashboard');
 
@@ -50,8 +50,13 @@ router.post('/clients/:id/edit', (req, res) => {
     return res.render('admin/edit', { record, error: `Username "${username}" is already taken.`, success: null });
   }
 
-  db.prepare('UPDATE clients SET username = ?, first_name = ?, last_name = ?, date_of_birth = ? WHERE id = ?')
-    .run(username, first_name || null, last_name || null, date_of_birth || null, req.params.id);
+  const einVal = (ein || '').replace(/\D/g, '');
+  if (einVal && einVal.length !== 9) {
+    return res.render('admin/edit', { record, error: 'EIN must be exactly 9 digits (XX-XXXXXXX).', success: null });
+  }
+
+  db.prepare('UPDATE clients SET username = ?, first_name = ?, last_name = ?, date_of_birth = ?, ein = ? WHERE id = ?')
+    .run(username, first_name || null, last_name || null, date_of_birth || null, einVal || null, req.params.id);
 
   if (password && password.trim().length >= 6) {
     const hash = bcrypt.hashSync(password, 10);
@@ -66,6 +71,31 @@ router.post('/clients/:id/edit', (req, res) => {
 router.post('/clients/:id/delete', (req, res) => {
   db.prepare('DELETE FROM clients WHERE id = ?').run(req.params.id);
   res.redirect('/admin/dashboard?success=Client+deleted.');
+});
+
+// Change admin password
+router.get('/password', (req, res) => {
+  res.render('admin/password', { error: null, success: null });
+});
+
+router.post('/password', (req, res) => {
+  const { current_password, new_password, confirm_password } = req.body;
+
+  if (!new_password || new_password.length < 8) {
+    return res.render('admin/password', { error: 'New password must be at least 8 characters.', success: null });
+  }
+  if (new_password !== confirm_password) {
+    return res.render('admin/password', { error: 'New password and confirmation do not match.', success: null });
+  }
+
+  const admin = db.prepare('SELECT * FROM admins WHERE id = ?').get(req.session.adminId);
+  if (!bcrypt.compareSync(current_password, admin.password_hash)) {
+    return res.render('admin/password', { error: 'Current password is incorrect.', success: null });
+  }
+
+  const hash = bcrypt.hashSync(new_password, 10);
+  db.prepare('UPDATE admins SET password_hash = ? WHERE id = ?').run(hash, req.session.adminId);
+  res.render('admin/password', { error: null, success: 'Password changed successfully.' });
 });
 
 module.exports = router;

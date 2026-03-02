@@ -12,7 +12,7 @@
 <% if (typeof navType !== 'undefined' && navType === 'client') { %>
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
   <div class="container">
-    <a class="navbar-brand" href="/client/dashboard"><i class="bi bi-person-circle me-2"></i>Client Portal</a>
+    <a class="navbar-brand" href="/client/dashboard"><i class="bi bi-person-circle me-2"></i>Ryan King Enterprises</a>
     <div class="navbar-nav ms-auto align-items-center">
       <span class="navbar-text text-white me-3">Welcome, <%= session.clientName %></span>
       <form action="/logout" method="post" class="d-inline">
@@ -27,6 +27,9 @@
     <a class="navbar-brand" href="/admin/dashboard"><i class="bi bi-shield-lock me-2"></i>Admin Panel</a>
     <div class="navbar-nav ms-auto align-items-center">
       <span class="navbar-text text-white me-3"><%= session.adminName %></span>
+      <a href="/admin/password" class="btn btn-outline-light btn-sm me-2">
+        <i class="bi bi-key me-1"></i>Password
+      </a>
       <form action="/logout" method="post" class="d-inline">
         <button class="btn btn-outline-light btn-sm">Logout</button>
       </form>
